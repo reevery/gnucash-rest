@@ -35,7 +35,7 @@ class ApiTestCase(unittest.TestCase):
             raise ValueError('unknown method in assert_error_type')
 
         if response.status == '400 BAD REQUEST':
-            json_response = json.loads(response.data)
+            json_response = json.loads(response.data.decode("utf-8"))
             return json_response['errors'][0]['type']
         else:
             raise ValueError('Non 400 error code: ' + response.status)
@@ -58,12 +58,12 @@ class ApiSessionTestCase(ApiTestCase):
         )
 
         response = self.app.post('/session', data=data)
-        assert response.data == '"Session started"'
+        assert response.data.decode("utf-8") == '"Session started"'
 
     def tearDown(self):
 
         response = self.app.delete('/session')
-        assert response.data == '"Session ended"'
+        assert response.data.decode("utf-8") == '"Session ended"'
 
         self.teardown_database()
 
@@ -71,7 +71,7 @@ class RootTestCase(ApiTestCase):
 
     def test_root(self):
         response = self.app.get('/')
-        assert response.data == '"Gnucash REST API"'
+        assert response.data.decode("utf-8") == '"Gnucash REST API"'
 
     def test_root_cors(self):
         gnucash_rest.app.cors_origin = '*'
@@ -112,6 +112,9 @@ class SessionTestCase(ApiTestCase):
 
         self.setup_database()
 
+        # Logs
+        # CRIT <gnc.backend.dbi> [GncDbiSqlConnection::begin_transaction()] BEGIN transaction failed()
+
         error = gnucash_rest.startup()
         assert error.data['code'] == 'ERR_BACKEND_NO_SUCH_DB'
 
@@ -134,7 +137,7 @@ class SessionTestCase(ApiTestCase):
         # CRIT <gnc.backend.dbi> gnc_dbi_unlock: assertion 'dbi_conn_error( dcon, NULL ) == 0' failed
 
         response = self.app.delete('/session')
-        assert response.data == '"Session ended"'
+        assert response.data.decode("utf-8") == '"Session ended"'
 
         self.teardown_database()
 
@@ -157,10 +160,10 @@ class SessionTestCase(ApiTestCase):
 
         # 201 CREATED
         response = self.app.post('/session', data=data)
-        assert response.data == '"Session started"'
+        assert response.data.decode("utf-8") == '"Session started"'
 
         response = self.app.delete('/session')
-        assert response.data == '"Session ended"'
+        assert response.data.decode("utf-8") == '"Session ended"'
 
         self.teardown_database()
 
@@ -203,18 +206,18 @@ class AccountsSessionTestCase(ApiTestCase):
         )
 
         response = self.app.post('/session', data=data)
-        assert response.data == '"Session started"'
+        assert response.data.decode("utf-8") == '"Session started"'
 
     def tearDown(self):
 
         response = self.app.delete('/session')
-        assert response.data == '"Session ended"'
+        assert response.data.decode("utf-8") == '"Session ended"'
 
         self.teardown_database()
 
     def test_accounts(self):
 
-        response = json.loads(self.app.get('/accounts').data)
+        response = json.loads(self.app.get('/accounts').data.decode("utf-8"))
         assert response['name'] == 'Root Account'
 
     # need tests for mangled add accounts
@@ -225,7 +228,7 @@ class AccountsSessionTestCase(ApiTestCase):
             name = 'Test',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         assert response['name'] == 'Test'
 
@@ -263,7 +266,7 @@ class AccountsSessionTestCase(ApiTestCase):
     def test_add_account(self):
 
         # this is test_accounts
-        response = json.loads(self.app.get('/accounts').data)
+        response = json.loads(self.app.get('/accounts').data.decode("utf-8"))
         assert response['name'] == 'Root Account'
 
         response = json.loads(self.app.post('/accounts', data=dict(
@@ -271,7 +274,7 @@ class AccountsSessionTestCase(ApiTestCase):
             currency  = 'GBP',
             account_type_id = '2',
             parent_account_guid = response['guid'],
-        )).data)
+        )).data.decode("utf-8"))
 
         assert response['name'] == 'Test'
 
@@ -285,9 +288,9 @@ class AccountsSessionTestCase(ApiTestCase):
             name = 'Test',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
-        response = json.loads(self.app.get('/accounts/' + response['guid']).data)
+        response = json.loads(self.app.get('/accounts/' + response['guid']).data.decode("utf-8"))
 
         assert response['name'] == 'Test'
 
@@ -295,14 +298,15 @@ class AccountsSessionTestCase(ApiTestCase):
         assert self.app.get('/accounts/none/splits').status == '404 NOT FOUND'
     
     def test_account_get_splits_empty(self):
+
         # this is test_add_account
         response = json.loads(self.app.post('/accounts', data=dict(
             name = 'Test',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
-        assert not json.loads(self.app.get('/accounts/' + response['guid'] + '/splits').data)
+        assert not json.loads(self.app.get('/accounts/' + response['guid'] + '/splits').data.decode("utf-8"))
 
 class TransactionsTestCase(ApiTestCase):
 
@@ -330,12 +334,12 @@ class TransactionsSessionTestCase(ApiTestCase):
         )
 
         response = self.app.post('/session', data=data)
-        assert response.data == '"Session started"'
+        assert response.data.decode("utf-8") == '"Session started"'
 
     def tearDown(self):
 
         response = self.app.delete('/session')
-        assert response.data == '"Session ended"'
+        assert response.data.decode("utf-8") == '"Session ended"'
 
         self.teardown_database()
 
@@ -348,13 +352,13 @@ class TransactionsSessionTestCase(ApiTestCase):
             name = 'Test',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         splitaccount2 = json.loads(self.app.post('/accounts', data=dict(
             name = 'Test 2',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         data = dict(
             currency = 'GBP',
@@ -370,7 +374,7 @@ class TransactionsSessionTestCase(ApiTestCase):
         # Worked around by adding the following to mysqld.cnf
         # sql_mode=ONLY_FULL_GROUP_BY,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
 
-        return json.loads(self.app.post('/transactions', data=data).data)
+        return json.loads(self.app.post('/transactions', data=data).data.decode("utf-8"))
 
     def createTransactionGuid(self):
         transaction = self.createTransaction()
@@ -424,7 +428,7 @@ class TransactionsSessionTestCase(ApiTestCase):
             name = 'Test',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         data = dict(
             currency = 'GBP',
@@ -441,7 +445,7 @@ class TransactionsSessionTestCase(ApiTestCase):
             name = 'Test',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         data = dict(
             currency = 'GBP',
@@ -459,13 +463,13 @@ class TransactionsSessionTestCase(ApiTestCase):
             name = 'Test',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         splitaccount2 = json.loads(self.app.post('/accounts', data=dict(
             name = 'Test 2',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         data = dict(
             currency = 'EUR',
@@ -484,13 +488,13 @@ class TransactionsSessionTestCase(ApiTestCase):
             name = 'Test',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         splitaccount2 = json.loads(self.app.post('/accounts', data=dict(
             name = 'Test 2',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         data = dict(
             currency = 'GBP',
@@ -519,13 +523,13 @@ class TransactionsSessionTestCase(ApiTestCase):
             name = 'Test',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         splitaccount2 = json.loads(self.app.post('/accounts', data=dict(
             name = 'Test 2',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         data = dict(
             currency = 'GBP',
@@ -543,9 +547,9 @@ class TransactionsSessionTestCase(ApiTestCase):
         # Worked around by adding the following to mysqld.cnf
         # sql_mode=ONLY_FULL_GROUP_BY,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
 
-        response = json.loads(self.app.post('/transactions', data=data).data)
+        response = json.loads(self.app.post('/transactions', data=data).data.decode("utf-8"))
 
-        transaction = json.loads(self.app.get('/transactions/' +  response['guid'], data=dict()).data)
+        transaction = json.loads(self.app.get('/transactions/' +  response['guid'], data=dict()).data.decode("utf-8"))
 
         assert transaction['description'] == 'Test transaction'
 
@@ -617,13 +621,13 @@ class TransactionsSessionTestCase(ApiTestCase):
             name = 'Test',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         splitaccount2 = json.loads(self.app.post('/accounts', data=dict(
             name = 'Test 2',
             currency  = 'GBP',
             account_type_id = '2'
-        )).data)
+        )).data.decode("utf-8"))
 
         data = dict(
             currency = 'GBP',
@@ -773,7 +777,7 @@ class TransactionsSessionTestCase(ApiTestCase):
 
         )
 
-        response = json.loads(self.app.post('/transactions/' + transaction['guid'], data=data).data)
+        response = json.loads(self.app.post('/transactions/' + transaction['guid'], data=data).data.decode("utf-8"))
 
         assert response['description'] == 'Updated test transaction'
 
@@ -795,7 +799,7 @@ class VendorsTestCase(ApiTestCase):
 class VendorsSessionTestCase(ApiSessionTestCase):
 
     def test_add_vendor_no_parameters(self):
-        assert self.app.get('/vendors').data == '[]'
+        assert self.app.get('/vendors').data.decode("utf-8") == '[]'
 
     def test_add_vendor_no_name(self):
         assert self.get_error_type('post', '/vendors', dict()) == 'NoVendorName'
