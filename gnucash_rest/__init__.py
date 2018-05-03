@@ -2183,7 +2183,7 @@ def add_transaction(book, num, description, date_posted, currency_mnumonic, spli
     transaction.SetDescription(description)
     transaction.SetNum(num)
 
-    transaction.SetDatePostedTS(date_posted)
+    transaction.SetDatePostedSecs(date_posted)
 
     transaction.CommitEdit()
 
@@ -2293,7 +2293,7 @@ def edit_transaction(book, transaction_guid, num, description, date_posted,
     transaction.SetDescription(description)
     transaction.SetNum(num)
 
-    transaction.SetDatePostedTS(date_posted)
+    transaction.SetDatePostedSecs(date_posted)
 
     transaction.CommitEdit()
 
