@@ -8,6 +8,9 @@ import warnings
 class ApiTestCase(unittest.TestCase):
 
     def setUp(self):
+
+        print("\nIn method", self._testMethodName)
+
         self.app = gnucash_rest.app.test_client()
         self.app.testing = True
 
@@ -306,7 +309,13 @@ class AccountsSessionTestCase(ApiTestCase):
             account_type_id = '2'
         )).data.decode("utf-8"))
 
-        assert not json.loads(self.app.get('/accounts/' + response['guid'] + '/splits').data.decode("utf-8"))
+        # Logs in Python3 - this probably actually results in failing to return splits - though there's no test yet
+        # WARN <qof.class> [qof_class_get_parameter()] no object of type qof_class_get_parameter
+        # WARN <qof.class> [qof_class_get_parameter()] no object of type qof_class_get_parameter
+        # WARN <qof.class> [qof_class_get_parameter()] no object of type qof_class_get_parameter
+        # CRIT <qof.object> [qof_object_foreach()] No object of type qof_object_foreach
+
+        assert json.loads(self.app.get('/accounts/' + response['guid'] + '/splits').data.decode("utf-8")) == []
 
 class TransactionsTestCase(ApiTestCase):
 
@@ -799,9 +808,6 @@ class VendorsTestCase(ApiTestCase):
 class VendorsSessionTestCase(ApiSessionTestCase):
 
     def test_add_vendor_no_parameters(self):
-        assert self.app.get('/vendors').data.decode("utf-8") == '[]'
-
-    def test_add_vendor_no_name(self):
         assert self.get_error_type('post', '/vendors', dict()) == 'NoVendorName'
 
     def test_add_vendor_no_address(self):
@@ -837,6 +843,15 @@ class VendorsSessionTestCase(ApiSessionTestCase):
         )
 
         assert self.app.post('/vendors', data=data).status == '201 CREATED'
+
+    def test_get_vendors(self):
+
+        # Logs
+        # WARN <qof.class> [qof_class_get_parameter()] no object of type 
+        # WARN <qof.class> [qof_class_get_parameter()] no object of type
+        # CRIT <qof.object> [qof_object_foreach()] No object of type
+
+        assert self.app.get('/vendors').data.decode("utf-8") == '[]'
 
 if __name__ == '__main__':
     unittest.main()
