@@ -29,6 +29,8 @@ Boston, MA 02110-1301, USA gnu@gnu.org
 import gnucash
 from gnucash.gnucash_business import Entry, Split, Account
 import sys
+from datetime import datetime, timedelta
+
 
 def addressToDict(address):
     if address is None:
@@ -297,22 +299,25 @@ def accountToDict(account):
     if account is None:
         return None
     else:
-        simple_account = {}
-        simple_account['name'] = account.GetName()
-        simple_account['type_id'] = account.GetType()
-        simple_account['description'] = account.GetDescription()
-        simple_account['guid'] = account.GetGUID().to_string()
-        if account.GetCommodity() == None:
+        simple_account = {
+            'reconciled_balance': account.GetReconciledBalance().to_double(),
+            'present_balance': account.GetPresentBalance().to_double(),
+            'balance_tomorrow': account.GetBalanceAsOfDate(
+                datetime.now()+timedelta(days=1)).to_double(),
+            'name': account.GetName(),
+            'type_id': account.GetType(),
+            'description': account.GetDescription(),
+            'guid': account.GetGUID().to_string(),
+            'balance': account.GetBalance().to_double(),
+            'balance_gbp': account.GetBalanceInCurrency(gbp, True).to_double(),
+            'placeholder': account.GetPlaceholder(),
+        }
+        if account.GetCommodity() is None:
             simple_account['currency'] = ''
         else:
             simple_account['currency'] = account.GetCommodity().get_mnemonic()
         simple_account['subaccounts'] = []
         for n, subaccount in enumerate(account.get_children_sorted()):
             simple_account['subaccounts'].append(accountToDict(subaccount))
-
-        simple_account['balance'] = account.GetBalance().to_double()
-        simple_account['balance_gbp'] = account.GetBalanceInCurrency(
-            gbp, True).to_double()
-        simple_account['placeholder'] = account.GetPlaceholder()
 
         return simple_account
