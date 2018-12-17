@@ -44,7 +44,7 @@ import datetime
 from decimal import Decimal
 
 from gnucash.gnucash_business import Vendor, Bill, Entry, GncNumeric, \
-    Customer, Invoice, Split, Account, Transaction, GncPrice
+    Customer, Invoice, Split, Account, Transaction
 
 # not actually used - only used on frontend so far
 # from gnucash.gnucash_business import \
@@ -1115,7 +1115,7 @@ def api_prices(mnemonic):
                                      for ns in table.get_namespaces_list()]
                          if c.get_mnemonic() == mnemonic)
 
-    p = GncPrice(book)
+    p = gnucash.GncPrice(book)
     p.set_time(datetime.datetime.now())
     p.set_commodity(gnc_commodity)
     p.set_currency(gnc_currency)
