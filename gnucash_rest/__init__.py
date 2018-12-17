@@ -45,6 +45,10 @@ from decimal import Decimal
 
 from gnucash.gnucash_business import Vendor, Bill, Entry, GncNumeric, \
     Customer, Invoice, Split, Account, Transaction
+from gnucash import GncPrice
+# from .gncprice_patch import GncPrice  # This is a patch to cover the lack of __init__
+from .gncprice_patch import create_price  # This is a patch to cover the lack of __init__
+GncPrice.__init__ = create_price
 
 # not actually used - only used on frontend so far
 # from gnucash.gnucash_business import \
@@ -1089,8 +1093,8 @@ def get_api_prices():
             "mnemonic": c.get_mnemonic(),
             "cusip": c.get_cusip(),
             "fraction": c.get_fraction(),
-            "latest_price": GncNumeric(instance=price_db.lookup_latest(
-                c, currency).get_value()),
+            # "latest_price": GncNumeric(instance=price_db.lookup_latest(
+            #     c, currency).get_value()),
             "latest_price_currency": display_currency,
         } for c in ns.get_commodity_list()],
     } for ns in table.get_namespaces_list()])
