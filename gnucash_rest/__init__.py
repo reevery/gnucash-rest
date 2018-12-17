@@ -1078,23 +1078,26 @@ def get_api_prices():
 
     book = session.book
     table = book.get_table()
-    # price_db = book.get_price_db()
-    # currency = table.lookup('ISO4217', 'GBP')
+    price_db = book.get_price_db()
+    display_currency = 'GBP'
+    currency = table.lookup('ISO4217', display_currency)
 
     return jsonify([{
-        "name": ns.get_name(),
+        "namespace": ns.get_name(),
         "commodities": [{
             "fullname": c.get_fullname(),
             "mnemonic": c.get_mnemonic(),
             "cusip": c.get_cusip(),
             "fraction": c.get_fraction(),
-            # "price": price_db.lookup_latest(c, )
+            "latest_price": GncNumeric(instance=price_db.lookup_latest(
+                c, currency).get_value()),
+            "latest_price_currency": display_currency,
         } for c in ns.get_commodity_list()],
     } for ns in table.get_namespaces_list()])
 
 
 @app.route('/prices/<mnemonic>', methods=['POST'])
-def api_prices(mnemonic):
+def post_api_price(mnemonic):
     """
     Sets a price in the db
     :return: Status
@@ -1115,7 +1118,7 @@ def api_prices(mnemonic):
                                      for ns in table.get_namespaces_list()] for c in cl
                          if c.get_mnemonic() == mnemonic)
 
-    p = gnucash.GncPrice(book)
+    p = GncPrice(book)
     p.set_time(datetime.datetime.now())
     p.set_commodity(gnc_commodity)
     p.set_currency(gnc_currency)
