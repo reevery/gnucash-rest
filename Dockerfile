@@ -5,7 +5,7 @@ RUN apt-get update \
     && apt-get install -y
         python-gnucash \
         python-pip \
-        mysql-client
+        libdbd-mysql
 
 WORKDIR /code
 
