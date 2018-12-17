@@ -1111,8 +1111,8 @@ def api_prices(mnemonic):
     table = book.get_table()
     # price_db = book.get_price_db()
     gnc_currency = table.lookup('ISO4217', currency)
-    gnc_commodity = next(c for c in [ns.get_commodity_list()
-                                     for ns in table.get_namespaces_list()]
+    gnc_commodity = next(c for cl in [ns.get_commodity_list()
+                                     for ns in table.get_namespaces_list()] for c in cl
                          if c.get_mnemonic() == mnemonic)
 
     p = gnucash.GncPrice(book)
