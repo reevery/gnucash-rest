@@ -2,10 +2,11 @@
 FROM ubuntu
 
 RUN apt-get update \
-    && apt-get install -y \
-        python-gnucash \
-        python-pip \
-        libdbd-mysql
+ && apt-get install -y \
+    python-gnucash \
+    python-pip \
+    libdbd-mysql \
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /code
 
