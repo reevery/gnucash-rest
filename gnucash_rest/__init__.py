@@ -1066,7 +1066,7 @@ def api_vendor_bills(id):
 
 
 @app.route('/prices')
-def api_prices():
+def get_api_prices():
     """
     Returns all of the API prices in the db
     :return: Status
