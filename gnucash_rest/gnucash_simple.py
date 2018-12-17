@@ -30,6 +30,7 @@ import gnucash
 from gnucash.gnucash_business import Entry, Split, Account
 import sys
 from datetime import datetime, timedelta
+import time
 
 
 def addressToDict(address):
@@ -303,7 +304,7 @@ def accountToDict(account):
             'reconciled_balance': account.GetReconciledBalance().to_double(),
             'present_balance': account.GetPresentBalance().to_double(),
             'balance_tomorrow': account.GetBalanceAsOfDate(
-                datetime.now()+timedelta(days=1)).to_double(),
+                time.mktime((datetime.now()+timedelta(days=1)).timetuple())).to_double(),
             'name': account.GetName(),
             'type_id': account.GetType(),
             'description': account.GetDescription(),
