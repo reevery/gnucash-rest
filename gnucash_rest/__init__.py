@@ -33,7 +33,7 @@ import gnucash_simple
 import json
 import atexit
 from functools import wraps
-from flask import Flask, abort, request, Response, g
+from flask import Flask, abort, request, Response, g, jsonify
 import re
 import sys
 
@@ -44,7 +44,7 @@ import datetime
 from decimal import Decimal
 
 from gnucash.gnucash_business import Vendor, Bill, Entry, GncNumeric, \
-    Customer, Invoice, Split, Account, Transaction
+    Customer, Invoice, Split, Account, Transaction, GncPrice
 
 # not actually used - only used on frontend so far
 # from gnucash.gnucash_business import \
@@ -1063,6 +1063,67 @@ def api_vendor_bills(id):
             status=400, mimetype='application/json')
          
     return Response(json.dumps(bills), mimetype='application/json')
+
+
+@app.route('/prices')
+def api_prices():
+    """
+    Returns all of the API prices in the db
+    :return: Status
+    """
+    try:
+        session = get_session()
+    except Error as error:
+        return jsonify({'errors': error}), 400
+
+    book = session.book
+    table = book.get_table()
+    # price_db = book.get_price_db()
+    # currency = table.lookup('ISO4217', 'GBP')
+
+    return jsonify([{
+        "name": ns.get_name(),
+        "commodities": [{
+            "fullname": c.get_fullname(),
+            "mnemonic": c.get_mnemonic(),
+            "cusip": c.get_cusip(),
+            "fraction": c.get_fraction(),
+            # "price": price_db.lookup_latest(c, )
+        } for c in ns.get_commodity_list()],
+    } for ns in table.get_namespaces_list()])
+
+
+@app.route('/prices/<mnemonic>', methods=['POST'])
+def api_prices(mnemonic):
+    """
+    Sets a price in the db
+    :return: Status
+    """
+    try:
+        session = get_session()
+    except Error as error:
+        return jsonify({'errors': error}), 400
+
+    value = request.form.get('value')
+    currency = request.form.get('currency')
+
+    book = session.book
+    table = book.get_table()
+    # price_db = book.get_price_db()
+    gnc_currency = table.lookup('ISO4217', currency)
+    gnc_commodity = next(c for c in [ns.get_commodity_list()
+                                     for ns in table.get_namespaces_list()]
+                         if c.get_mnemonic() == mnemonic)
+
+    p = GncPrice(book)
+    p.set_time(datetime.datetime.now())
+    p.set_commodity(gnc_commodity)
+    p.set_currency(gnc_currency)
+    p.set_value(value)
+    book.get_price_db().add_price(p)
+
+    return jsonify('price {} {} set for {}'.format(value, currency, mnemonic))
+
 
 def get_customers(book):
 
