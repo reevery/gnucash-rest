@@ -2585,7 +2585,7 @@ def gnc_numeric_from_decimal(decimal_value):
 
 class Error(Exception):
     """Base class for exceptions in this module."""
-    def __init__(self, type, message, data):
+    def __init__(self, type, message, data={}):
         self.type = type
         self.message = message
         self.data = data
